@@ -1,6 +1,37 @@
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 
+def remove_all_ports():
+    """
+    Remove all public ports for an AWS Lightsail instance.
+
+    Parameters:
+    - instance_name (str): The name of the Lightsail instance.
+
+    Returns:
+    - response: The response from the put_instance_public_ports API call.
+    """
+    try:
+        # Initialize the Lightsail client
+        session = boto3.Session(profile_name="daisy", region_name="ap-south-1")
+        client = session.client('lightsail')
+
+        # Remove all ports by configuring the instance with no open ports
+        response = client.put_instance_public_ports(
+            portInfos=[],  # Empty list to close all ports
+            instanceName="Debian-1"
+        )
+
+        print("All ports configuration removed.")
+        return response
+
+    except NoCredentialsError:
+        print("AWS credentials not available.")
+        return None
+    except ClientError as e:
+        print(f"An error occurred: {e}")
+        return None
+
 
 def configure_instance_ports(instance_name, from_port, to_port, protocol, cidrs=None, ipv6_cidrs=None, cidr_list_aliases=None):
     """
@@ -68,5 +99,7 @@ if __name__ == "__main__":
     cidr_list_aliases = []  # Use 'all' alias
 
     response = configure_instance_ports(instance_name, from_port, to_port, protocol, cidrs, ipv6_cidrs, cidr_list_aliases)
+    # response = remove_all_ports()
+    
     if response:
         print(response)
